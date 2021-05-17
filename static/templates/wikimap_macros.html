@@ -1,0 +1,3 @@
+{% macro url_for_wikimap(map) -%}
+{{ map.title.replace(' ', '_') }}?levels={{ map.levels }}&ppl={{ map.pages_per_level }}
+{%- endmacro %}

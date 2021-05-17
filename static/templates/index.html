@@ -1,8 +1,11 @@
 {% extends "layout.html" %}
+{% from 'wikimap_macros.html' import url_for_wikimap %}
 {% block title %}Home{% endblock %}
 {% block imports %}
 <link href="{{ url_for('static', path='css/styles.css') }}" rel="stylesheet">
 {% endblock %}
+
+
 
 {% block body %}
 <!-- <form action="/" method="post">
@@ -14,7 +17,9 @@
   <h3>Available Maps:</h3>
   <ul>
     {% for map in maps %}
-    <li><a href="maps/{{ map }}">{{ map }}</a></li>
+    <li><a href="maps/{{ url_for_wikimap(map) }}">{{ map.title }}</a> (levels: {{ map.levels }}, pages per level: {{
+      map.pages_per_level}})
+    </li>
     {% endfor %}
   </ul>
 </div>

@@ -1,50 +1,85 @@
-import os
-from pathlib import Path
-
-
-import wikipedia
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-
-app = FastAPI()
-
-# domain where this api is hosted for example : localhost:5000/docs to see swagger documentation automagically generated.
-
-URI = os.environ["DATABASE_URL"]
-if URI.startswith("postgres://"):
-    URI = URI.replace("postgres://", "postgresql://", 1)
-# rest of connection code using the connection string `uri`
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="static/templates")
+from sqlalchemy.exc import OperationalError
 
 
-def search_result(page_name: str) -> str:
-    return wikipedia.page(page_name)
+from database.db import Database
+from database.models import WikiMap
+from utils.custom_logging import CustomizeLogger
+
+MAX_LEVELS = 4
+MAX_PPL = 16
+TEMPLATES = Jinja2Templates(directory="static/templates")
 
 
-def get_available_maps():
-    data_path = Path("static/data")
-    available_maps = []
-    for child in data_path.iterdir():
-        if child.suffix == ".json":
-            available_maps.append(child.stem)
-    return available_maps
+def create_app() -> FastAPI:
+    new_app = FastAPI(title="CustomLogger", debug=False)
+    logger = CustomizeLogger.make_logger()
+    new_app.logger = logger
+    new_app.mount("/static", StaticFiles(directory="static"), name="static")
+    try:  # default: try production ssl
+        new_app.db = Database()
+        sess = new_app.db.Session()
+        sess.query(WikiMap).first()
+        sess.close()
+        new_app.logger.info("SSL connection to database SUCCEEDED")
+    except OperationalError:  # happens on local db
+        new_app.logger.critical("SSL connection to database FAILED")
+        new_app.db = Database(sslmode=False)
+
+    return new_app
+
+
+app = create_app()
 
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse(
-        "index.html", {"request": request, "maps": get_available_maps()}
+    return TEMPLATES.TemplateResponse(
+        "index.html", {"request": request, "maps": app.db.get_available_maps()}
     )
 
 
-@app.get("/maps/{file_name}")
-async def graph_json(file_name: str, request: Request, response_class=HTMLResponse):
-    return templates.TemplateResponse(
-        "interface.html", {"request": request, "file_name": file_name}
-    )
+@app.get("/json/{title}")
+async def get_json(
+    title: str,
+    levels: int = Query(..., gt=0, lt=MAX_LEVELS),
+    ppl: int = Query(..., gt=0, lt=MAX_PPL),
+):
+    title = title.replace("_", " ")
+    with app.db.Session() as sess:
+        result = (
+            sess.query(WikiMap)
+            .filter_by(title=title, levels=levels, pages_per_level=ppl)
+            .first()
+        )
+        if result is None:
+            raise HTTPException(status_code=404, detail="json doesn't exist")
+        else:
+            return result.json_data
+
+
+@app.get("/maps/{title}")
+async def graph_json(
+    request: Request,
+    title: str,
+    levels: int = Query(..., gt=0, lt=MAX_LEVELS),
+    ppl: int = Query(..., gt=0, lt=MAX_PPL),
+):
+    title = title.replace("_", " ")
+    with app.db.Session() as sess:
+        app.logger.info("%s, %i, %i", title, levels, ppl)
+        result = (
+            sess.query(WikiMap)
+            .filter_by(title=title, levels=levels, pages_per_level=ppl)
+            .first()
+        )
+        if result is None:
+            raise HTTPException(status_code=404, detail="map doesn't exist")
+        else:
+            return TEMPLATES.TemplateResponse(
+                "interface.html", {"request": request, "map": result}
+            )
