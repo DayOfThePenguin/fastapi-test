@@ -1,4 +1,6 @@
 import json
+import re
+
 from pathlib import Path
 
 from sqlalchemy.engine import create_engine
@@ -19,29 +21,42 @@ def get_available_sample_maps():
     return available_maps
 
 
-def create_dummy_entries(session_maker):
-    sample_maps = get_available_sample_maps()
-    json_dict = {
-        "nodes": [
-            {"id": "Quantum Mechanics", "group": 0},
-            {"id": "A. Douglas Stone", "group": 1},
-            {"id": "Abdus Salam", "group": 1},
-            {"id": "Abraham Pais", "group": 1},
-        ],
-        "links": [
-            {"source": "Quantum Mechanics", "target": "A. Douglas Stone", "value": 1},
-            {"source": "Quantum Mechanics", "target": "Abdus Salam", "value": 1},
-            {"source": "Quantum Mechanics", "target": "Abraham Pais", "value": 1},
-        ],
-    }
-    dummy_map = WikiMap(
-        title="Quantum Mechanics",
-        json_data=json_dict,
-        levels=1,
-        pages_per_level=3,
-    )
+def create_sample_entries(session_maker):
+    maps = get_available_sample_maps()
+    pattern = re.compile("(.+)_l_(\d+)_ppl_(\d+)")
+    titles = []
+    levels = []
+    ppls = []
+    json_files = []
+
+    for map in maps:
+        print(str(map))
+        results = pattern.split(str(map))
+        titles.append(results[1].replace("_", " "))
+        levels.append(results[2])
+        ppls.append(results[3])
+        file_name = map + ".json"
+        json_files.append(file_name)
+
     sess = session_maker()
-    sess.add(dummy_map)
+    for i, file in enumerate(json_files):
+        if (
+            sess.query(WikiMap)
+            .filter_by(title=titles[i], levels=levels[i], pages_per_level=ppls[i])
+            .first()
+            is not None
+        ):
+            print("Found duplicate: {}".format(titles[i]))
+            continue  # don't add duplicates
+        with open("static/sample_data/{}".format(file), "r") as f:
+            json_dict = json.load(f)
+        dummy_map = WikiMap(
+            title=titles[i],
+            json_data=json_dict,
+            levels=levels[i],
+            pages_per_level=ppls[i],
+        )
+        sess.add(dummy_map)
     sess.commit()
     sess.close()
 
@@ -78,7 +93,7 @@ def get_all(db):
 if __name__ == "__main__":
     uri = config.get_production_config_locally()
     database = Database(uri)
-    create_dummy_entries(database.Session)
+    create_sample_entries(database.Session)
     results = get_all(database)
     print(results)
     database.close()

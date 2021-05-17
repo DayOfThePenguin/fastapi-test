@@ -50,14 +50,12 @@ class WikipediaGraph(igraph.Graph):
 
     def map_vertex(self, page_name):
         page_link_count = 1
-
-        page = None
         try:
             page = wikipedia.page(page_name)
-        except (wikipedia.DisambiguationError, wikipedia.PageError) as e:
             print(page_name)
+        except (wikipedia.DisambiguationError, wikipedia.PageError) as e:
+            print("Disambiguation Error ({}). passing".format(page_name))
             return
-        print(page_name)
         page_links = map(lambda x: unidecode.unidecode(x), page.links)
 
         # if page isn't in graph
@@ -153,5 +151,5 @@ class WikipediaGraph(igraph.Graph):
 
 
 if __name__ == "__main__":
-    g = WikipediaGraph("Neuroscience", levels=4, pages_per_level=8)
+    g = WikipediaGraph("COVID-19_pandemic", levels=3, pages_per_level=12)
     g.write()

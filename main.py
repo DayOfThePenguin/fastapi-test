@@ -10,7 +10,7 @@ from database.db import Database
 from database.models import WikiMap
 from utils.custom_logging import CustomizeLogger
 
-MAX_LEVELS = 4
+MAX_LEVELS = 5
 MAX_PPL = 16
 TEMPLATES = Jinja2Templates(directory="static/templates")
 
