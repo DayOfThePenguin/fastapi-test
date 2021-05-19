@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from 'wikimap_macros.html' import url_from_suggestion %}
+{% block title %}Disambiguation{% endblock %}
+
+
+
+{% block body %}
+<div class="box">
+    <h1><a href="/">WikiMap</a></h1>
+    <div class="v-container">
+        <h3 class="item">Search Results:</h3>
+        <p>There are multiple pages related to "{{ title_query }}":</p>
+        <ul>
+            {% for suggestion in suggestions %}
+            <li>
+                <a href="maps/{{ url_from_suggestion(suggestion, levels, ppl) }}">
+                    {{ suggestion.title }}</a>: {{ suggestion.snippet }}
+            </li>
+            {% endfor %}
+          </ul>
+    </div>
+</div>
+
+{% endblock %}

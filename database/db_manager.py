@@ -23,19 +23,19 @@ def get_available_sample_maps():
 
 def create_sample_entries(session_maker):
     maps = get_available_sample_maps()
-    pattern = re.compile("(.+)_l_(\d+)_ppl_(\d+)")
+    pattern = re.compile(r"(.+)_l_(\d+)_ppl_(\d+)")
     titles = []
     levels = []
     ppls = []
     json_files = []
 
-    for map in maps:
+    for page_map in maps:
         print(str(map))
-        results = pattern.split(str(map))
+        results = pattern.split(str(page_map))
         titles.append(results[1].replace("_", " "))
         levels.append(results[2])
         ppls.append(results[3])
-        file_name = map + ".json"
+        file_name = page_map + ".json"
         json_files.append(file_name)
 
     sess = session_maker()
@@ -91,8 +91,7 @@ def get_all(db):
 
 
 if __name__ == "__main__":
-    uri = config.get_production_config_locally()
-    database = Database(uri)
+    database = Database(sslmode=False)
     create_sample_entries(database.Session)
     results = get_all(database)
     print(results)

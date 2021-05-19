@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Disambiguation{% endblock %}
+
+{% block body %}
+<div class="box">
+    <h1><a href="/">WikiMap</a></h1>
+    <div class="v-container">
+        <h3 class="item">Search Results:</h3>
+        <p>The page "{{ title_query }}" does not exist and Wikipedia has no suggested alternatives.</p>
+    </div>
+</div>
+{% endblock %}

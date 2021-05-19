@@ -1,3 +1,6 @@
 {% macro url_for_wikimap(map) -%}
 {{ map.title.replace(' ', '_') }}?levels={{ map.levels }}&ppl={{ map.pages_per_level }}
 {%- endmacro %}
+{% macro url_from_suggestion(suggestion, levels, ppl) -%}
+{{ suggestion.title.replace(' ', '_') }}?levels={{ levels }}&ppl={{ ppl }}
+{%- endmacro %}
