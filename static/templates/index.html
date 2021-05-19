@@ -1,20 +1,45 @@
-{% extends "layout.html" %}
+{% extends "base.html" %}
 {% from 'wikimap_macros.html' import url_for_wikimap %}
 {% block title %}Home{% endblock %}
-{% block imports %}
-<link href="{{ url_for('static', path='css/styles.css') }}" rel="stylesheet">
-{% endblock %}
 
 
 
 {% block body %}
-<!-- <form action="/" method="post">
-  <label>What do you want to know about?
-    <input type="text" name="idea" placeholder="I'm curious about..." />
-  </label>
-</form> -->
-<div>
-  <h3>Available Maps:</h3>
+<div class="box">
+  <h1><a href="/">WikiMap</a></h1>
+  <div class="v-container">
+    <h3>Search for Wikipedia Page:</h3>
+    <form action="/search" method="post">
+      <div class="item">
+        <label for="title_query">What Wikipedia page would you like to view?</label>
+        <input class="urlinput" type="text" name="title_query">
+      </div>
+      <div class="item">
+        <label for="levels">How many Levels?</label>
+        <select name="levels">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+      <div class="item">
+        <label for="ppl">How many pages per level?</label>
+        <select name="ppl">
+          <option value="8">8</option>
+          <option value="10">10</option>
+          <option value="12">12</option>
+          <option value="14">14</option>
+        </select>
+      </div>
+      <div class="item">
+        <input type="submit" value="Submit">
+      </div>
+    </form>
+  </div>
+</div>
+<div class="box">
+  <h3>Sample Maps:</h3>
   <ul>
     {% for map in maps %}
     <li><a href="maps/{{ url_for_wikimap(map) }}">{{ map.title }}</a> (levels: {{ map.levels }}, pages per level: {{

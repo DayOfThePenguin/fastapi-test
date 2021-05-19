@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Form, HTTPException, Query
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from starlette.staticfiles import StaticFiles
@@ -9,6 +9,7 @@ from sqlalchemy.exc import OperationalError
 from database.db import Database
 from database.models import WikiMap
 from utils.custom_logging import CustomizeLogger
+import utils.scratch
 
 MAX_LEVELS = 5
 MAX_PPL = 16
@@ -41,6 +42,34 @@ async def home(request: Request):
     return TEMPLATES.TemplateResponse(
         "index.html", {"request": request, "maps": app.db.get_available_maps()}
     )
+
+
+@app.post("/search")
+async def search(
+    request: Request,
+    title_query: str = Form(...),
+    levels: int = Form(...),
+    ppl: int = Form(...),
+):
+    TITLE, SUGGESTIONS = utils.scratch.search_title(title_query)
+    if SUGGESTIONS is None:
+        return TEMPLATES.TemplateResponse(
+            "err_no_page.html", {"request": request, "title_query": title_query}
+        )
+    elif TITLE is None:
+        return TEMPLATES.TemplateResponse(
+            "disambiguation.html",
+            {
+                "request": request,
+                "suggestions": SUGGESTIONS,
+                "levels": levels,
+                "ppl": ppl,
+                "title_query": title_query,
+            },
+        )
+    else:
+        LINKS = utils.scratch.get_links(TITLE, num_links=15)
+        return LINKS
 
 
 @app.get("/json/{title}")

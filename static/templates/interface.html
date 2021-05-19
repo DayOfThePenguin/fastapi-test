@@ -22,7 +22,7 @@
       .jsonUrl(jsonURL)
       .nodeLabel("id")
       .nodeAutoColorBy("group")
-      .onNodeClick(node => window.open("https://en.wikipedia.org/wiki/${node.id}", "blank"));
+      .onNodeClick(node => window.open(("https://en.wikipedia.org/wiki/" + node.id), "_blank"));
   </script>
 </body>
 
