@@ -11,13 +11,15 @@ from database.models import WikiMap
 from utils.custom_logging import CustomizeLogger
 import utils.scratch
 
+DEFAULT_LEVELS = 3
+DEFAULT_PPL = 8
 MAX_LEVELS = 5
 MAX_PPL = 16
 TEMPLATES = Jinja2Templates(directory="static/templates")
 
 
 def create_app() -> FastAPI:
-    new_app = FastAPI(title="CustomLogger", debug=False)
+    new_app = FastAPI(title="WikiMap", version="0.0.2", debug=False)
     logger = CustomizeLogger.make_logger()
     new_app.logger = logger
     new_app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -37,15 +39,10 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-@app.get("/test", response_class=HTMLResponse)
-async def vue(request: Request):
-    return TEMPLATES.TemplateResponse("vue.html", {"request": request})
-
-
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return TEMPLATES.TemplateResponse(
-        "index.html", {"request": request, "maps": app.db.get_available_maps()}
+        "vue.html", {"request": request, "maps": app.db.get_available_maps()}
     )
 
 
@@ -53,8 +50,8 @@ async def home(request: Request):
 async def search(
     request: Request,
     title_query: str = Form(...),
-    levels: int = Form(...),
-    ppl: int = Form(...),
+    levels: int = Form(DEFAULT_LEVELS),
+    ppl: int = Form(DEFAULT_PPL),
 ):
     TITLE, SUGGESTIONS = utils.scratch.search_title(title_query)
     if SUGGESTIONS is None:
