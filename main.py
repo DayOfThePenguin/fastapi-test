@@ -37,6 +37,11 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
+@app.get("/test", response_class=HTMLResponse)
+async def vue(request: Request):
+    return TEMPLATES.TemplateResponse("vue.html", {"request": request})
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return TEMPLATES.TemplateResponse(
