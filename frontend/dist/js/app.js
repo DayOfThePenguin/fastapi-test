@@ -258,7 +258,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _nod
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("module.exports = __webpack_require__.p + \"img/wikimap.47485f13.svg\";\n\n//# sourceURL=webpack:///./src/assets/wikimap.svg?");
+eval("module.exports = __webpack_require__.p + \"img/wikimap.5d9391e2.svg\";\n\n//# sourceURL=webpack:///./src/assets/wikimap.svg?");
 
 /***/ }),
 
