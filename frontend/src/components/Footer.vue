@@ -4,7 +4,7 @@
       <v-card flat tile color="secondary" class="text-center">
         <v-card-text>
           <v-btn href="/docs" class="mx-2" elevation="5" color="primary">
-            API Documentation
+            <v-icon>mdi-file-document-multiple-outline</v-icon> Documentation
           </v-btn>
           <v-btn
             href="https://github.com/DayOfThePenguin/r3th.ink"
@@ -12,6 +12,7 @@
             elevation="5"
             color="quinary"
           >
+            <v-icon>mdi-github</v-icon>
             GitHub
           </v-btn>
           <v-btn
@@ -20,7 +21,7 @@
             elevation="5"
             color="primary"
           >
-            Bugs/Feature Requests
+            <v-icon>mdi-bug-check</v-icon>Bugs/Feature Requests
           </v-btn>
         </v-card-text>
         <v-card-text class="white--text pt-0"> </v-card-text>
