@@ -1,8 +1,0 @@
-{
-    "logger": {
-      "path": "logs/server.log",
-      "filename": "server.log",
-      "level": "info",
-      "format": "<level>{level: <8}</level> <green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> request id: {extra[request_id]} - <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
-    }
-  }
