@@ -45,6 +45,8 @@
                             <v-divider></v-divider>
                         </v-col>
                     </v-row>
+                </v-container>
+                <v-container>
                     <v-row class="pa-2" justify="space-around">
                         <v-card flat tile class="red lighten-1 white--text text-center">
                             <v-card-title>Sample Maps</v-card-title>
@@ -106,6 +108,7 @@
                         </v-card-text>
                     </v-card>
                 </v-row>
+            </v-footer>
         </v-app>
     </div>
 
@@ -115,7 +118,7 @@
     <script>
         new Vue({
             el: '#app',
-            data: {
+            data() {
 
             },
             delimiters: ['[[', ']]'],

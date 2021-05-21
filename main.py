@@ -1,14 +1,16 @@
+import logging
+
 from fastapi import FastAPI, Form, HTTPException, Query
 from starlette.requests import Request
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, RedirectResponse
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
+from starlette.routing import Mount
 from sqlalchemy.exc import OperationalError
 
 
 from database.db import Database
 from database.models import WikiMap
-from utils.custom_logging import CustomizeLogger
 import utils.scratch
 
 DEFAULT_LEVELS = 3
@@ -19,8 +21,31 @@ TEMPLATES = Jinja2Templates(directory="static/templates")
 
 
 def create_app() -> FastAPI:
-    new_app = FastAPI(title="WikiMap", version="0.0.2", debug=False)
-    logger = CustomizeLogger.make_logger()
+    routes = [
+        Mount(
+            "/home",
+            app=StaticFiles(directory="frontend/dist", html=True),
+            name="frontend",
+        ),
+        Mount(
+            "/js",
+            app=StaticFiles(directory="frontend/dist/js"),
+            name="js",
+        ),
+        # Mount(
+        #     "/css",
+        #     app=StaticFiles(directory="frontend/dist/css"),
+        #     name="css",
+        # ),
+        Mount(
+            "/img",
+            app=StaticFiles(directory="frontend/dist/img"),
+            name="img",
+        ),
+    ]
+    new_app = FastAPI(title="WikiMap", version="0.0.2", debug=True, routes=routes)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
     new_app.logger = logger
     new_app.mount("/static", StaticFiles(directory="static"), name="static")
     try:  # default: try production ssl
@@ -39,11 +64,9 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=RedirectResponse)
 async def home(request: Request):
-    return TEMPLATES.TemplateResponse(
-        "vue.html", {"request": request, "maps": app.db.get_available_maps()}
-    )
+    return RedirectResponse("/home")
 
 
 @app.post("/search")
