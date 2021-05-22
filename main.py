@@ -14,9 +14,9 @@ from database.models import WikiMap
 import utils.scratch
 
 DEFAULT_LEVELS = 3
-DEFAULT_PPL = 8
+DEFAULT_LPP = 8
 MAX_LEVELS = 5
-MAX_PPL = 16
+MAX_LPP = 16
 TEMPLATES = Jinja2Templates(directory="static/templates")
 
 
@@ -74,7 +74,7 @@ async def search(
     request: Request,
     title_query: str = Form(...),
     levels: int = Form(DEFAULT_LEVELS),
-    ppl: int = Form(DEFAULT_PPL),
+    lpp: int = Form(DEFAULT_LPP),
 ):
     SUGGESTIONS = utils.scratch.search_title(title_query)
     if SUGGESTIONS is None:
@@ -88,7 +88,7 @@ async def search(
                 "request": request,
                 "suggestions": SUGGESTIONS,
                 "levels": levels,
-                "ppl": ppl,
+                "lpp": lpp,
                 "title_query": title_query,
             },
         )
@@ -98,14 +98,12 @@ async def search(
 async def get_json(
     title: str,
     levels: int = Query(..., gt=0, lt=MAX_LEVELS),
-    ppl: int = Query(..., gt=0, lt=MAX_PPL),
+    lpp: int = Query(..., gt=0, lt=MAX_LPP),
 ):
     title = title.replace("_", " ")
     with app.db.Session() as sess:
         result = (
-            sess.query(WikiMap)
-            .filter_by(title=title, levels=levels, pages_per_level=ppl)
-            .first()
+            sess.query(WikiMap).filter_by(title=title, levels=levels, lpp=lpp).first()
         )
         if result is None:
             raise HTTPException(status_code=404, detail="json doesn't exist")
@@ -118,15 +116,13 @@ async def graph_json(
     request: Request,
     title: str,
     levels: int = Query(..., gt=0, lt=MAX_LEVELS),
-    ppl: int = Query(..., gt=0, lt=MAX_PPL),
+    lpp: int = Query(..., gt=0, lt=MAX_LPP),
 ):
     title = title.replace("_", " ")
     with app.db.Session() as sess:
-        app.logger.info("%s, %i, %i", title, levels, ppl)
+        app.logger.info("%s, %i, %i", title, levels, lpp)
         result = (
-            sess.query(WikiMap)
-            .filter_by(title=title, levels=levels, pages_per_level=ppl)
-            .first()
+            sess.query(WikiMap).filter_by(title=title, levels=levels, lpp=lpp).first()
         )
         if result is None:
             raise HTTPException(status_code=404, detail="map doesn't exist")

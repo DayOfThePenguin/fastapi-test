@@ -24,8 +24,8 @@
         </select>
       </div>
       <div class="item">
-        <label for="ppl">How many pages per level?</label>
-        <select name="ppl">
+        <label for="lpp">How many pages per level?</label>
+        <select name="lpp">
           <option value="8">8</option>
           <option value="10">10</option>
           <option value="12">12</option>
@@ -43,7 +43,7 @@
   <ul>
     {% for map in maps %}
     <li><a href="maps/{{ url_for_wikimap(map) }}">{{ map.title }}</a> (levels: {{ map.levels }}, pages per level: {{
-      map.pages_per_level}})
+      map.lpp}})
     </li>
     {% endfor %}
   </ul>

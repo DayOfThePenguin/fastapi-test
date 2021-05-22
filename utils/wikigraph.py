@@ -4,6 +4,8 @@ import logging
 import igraph
 import unidecode
 
+from database.models import WikiMap
+
 import utils.scratch
 
 VERTICES_PER_CHUNK = 10
@@ -22,11 +24,11 @@ class WikipediaGraph(igraph.Graph):
             [description]
     """
 
-    def __init__(self, start_page, levels=1, ppl=10):
+    def __init__(self, start_page, levels=1, lpp=10):
         super().__init__()
         self.start_page = start_page
         self.levels = levels
-        self.ppl = ppl
+        self.lpp = lpp
 
     def generate(self, yield_size=None):
         """build out a graph of wikipedia page connections
@@ -49,14 +51,16 @@ class WikipediaGraph(igraph.Graph):
             dict of vertices and edges that can be sent over a websocket as json
         """
         start_vertex = self.add_vertex(name=self.start_page, is_mapped=False, level=0)
-        new_vertices = [start_vertex]
+        if yield_size is not None:
+            yield self._json_chunk([start_vertex], [])
+        new_vertices = []
         new_edges = []
         current_level = 1
         for _ in range(self.levels):
             unmapped_vertices = self.vs.select(is_mapped=False)
             for vertex in unmapped_vertices:
                 vertex_links = utils.scratch.get_links(
-                    vertex["name"], num_links=self.ppl
+                    vertex["name"], num_links=self.lpp
                 )
                 for link in vertex_links:
                     if self.is_page_in_graph(link):
@@ -80,6 +84,37 @@ class WikipediaGraph(igraph.Graph):
         if yield_size is not None:  # yield the last bit
             yield self._json_chunk(new_vertices, new_edges)
 
+    def generate_from_wikimap(self, wikimap: WikiMap, yield_size=10):
+        nodes = wikimap.json_data["nodes"]
+        links = wikimap.json_data["links"]
+        while True:
+            graph_json = {}
+            graph_json["nodes"] = []
+            graph_json["links"] = []
+            try:
+                node = nodes.pop(0)
+                graph_json["nodes"].append(node)
+            except IndexError:
+                graph_json["links"].extend(links)
+                yield graph_json
+                return None
+            for i in range(yield_size):
+                try:
+                    node = nodes.pop(0)
+                    graph_json["nodes"].append(node)
+                except IndexError:
+                    graph_json["links"].extend(links)
+                    yield graph_json
+                    return None
+                try:
+                    link = links.pop(0)
+                    graph_json["links"].append(link)
+                except IndexError:
+                    graph_json["nodes"].extend(nodes)
+                    yield graph_json
+                    return None
+            yield graph_json
+
     def _json_chunk(self, new_vertices, new_edges):
         """returns a json chunk that can be websocketed'd to the browser
 
@@ -95,7 +130,6 @@ class WikipediaGraph(igraph.Graph):
         graph_json["links"] = []
 
         for vertex in new_vertices:
-            print(vertex.attributes())
             graph_json["nodes"].append(
                 {"id": vertex.index, "name": vertex["name"], "group": vertex["level"]}
             )
@@ -125,8 +159,8 @@ class WikipediaGraph(igraph.Graph):
         use the json format that 3d-force-directed-graph can read
         """
         page_name = self.start_page.replace(" ", "_")
-        file_name = "static/sample_data/{}_l_{}_ppl_{}.json".format(
-            page_name, self.levels, self.ppl
+        file_name = "static/sample_data/{}_l_{}_lpp_{}.json".format(
+            page_name, self.levels, self.lpp
         )
         graph_json = {}
         graph_json["nodes"] = []
@@ -149,7 +183,7 @@ class WikipediaGraph(igraph.Graph):
 
 
 if __name__ == "__main__":
-    graph = WikipediaGraph("Neuroscience", levels=4, ppl=8)
+    graph = WikipediaGraph("Neuroscience", levels=4, lpp=8)
     for json_chunk in graph.generate():
         pass
         # print(json.dumps(json_chunk, indent=2, separators=(",", ": ")))

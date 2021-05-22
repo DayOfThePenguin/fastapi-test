@@ -7,7 +7,7 @@ from sqlalchemy.engine import create_engine
 
 from database.models import WikiMap
 from database.db import Database
-from database import config, crud, models
+from database import models
 
 Base = models.BASE
 
@@ -23,10 +23,10 @@ def get_available_sample_maps():
 
 def create_sample_entries(session_maker):
     maps = get_available_sample_maps()
-    pattern = re.compile(r"(.+)_l_(\d+)_ppl_(\d+)")
+    pattern = re.compile(r"(.+)_l_(\d+)_lpp_(\d+)")
     titles = []
     levels = []
-    ppls = []
+    lpps = []
     json_files = []
 
     for page_map in maps:
@@ -34,7 +34,7 @@ def create_sample_entries(session_maker):
         results = pattern.split(str(page_map))
         titles.append(results[1].replace("_", " "))
         levels.append(results[2])
-        ppls.append(results[3])
+        lpps.append(results[3])
         file_name = page_map + ".json"
         json_files.append(file_name)
 
@@ -42,7 +42,7 @@ def create_sample_entries(session_maker):
     for i, file in enumerate(json_files):
         if (
             sess.query(WikiMap)
-            .filter_by(title=titles[i], levels=levels[i], pages_per_level=ppls[i])
+            .filter_by(title=titles[i], levels=levels[i], lpp=lpps[i])
             .first()
             is not None
         ):
@@ -54,7 +54,7 @@ def create_sample_entries(session_maker):
             title=titles[i],
             json_data=json_dict,
             levels=levels[i],
-            pages_per_level=ppls[i],
+            lpp=lpps[i],
         )
         sess.add(dummy_map)
     sess.commit()
