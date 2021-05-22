@@ -1,36 +1,32 @@
+import logging
 import requests
-import wikipedia
 
-from wikipedia.exceptions import PageError, DisambiguationError
-
+logging.basicConfig(level=logging.INFO)
 WIKIURL = "https://en.wikipedia.org/w/api.php"
 
 
 def search_title(title_guess):
-    correct_title = None
     suggestions = []
-    try:
-        wikipedia.page(title_guess)
-        correct_title = title_guess
-    except:  # likely PageError or DisambiguationError
-        with requests.Session() as sess:
-            params = {
-                "action": "query",
-                "format": "json",
-                "list": "search",
-                "srlimit": "5",
-                "srsearch": title_guess.replace(" ", "_"),
-            }
-
-            resp = sess.get(url=WIKIURL, params=params)
-            json_data = resp.json()
-            if json_data["query"]["searchinfo"]["totalhits"] == 0:  # no search results
-                # new_guess = json_data["query"]["searchinfo"]["suggestion"]
+    with requests.Session() as sess:
+        params = {
+            "action": "query",
+            "format": "json",
+            "list": "search",
+            "srlimit": "5",
+            "srsearch": title_guess.replace(" ", "_"),
+        }
+        resp = sess.get(url=WIKIURL, params=params)
+        json_data = resp.json()
+        if json_data["query"]["searchinfo"]["totalhits"] == 0:  # no search results
+            try:
+                new_guess = json_data["query"]["searchinfo"]["suggestion"]
+                suggestions = search_title(new_guess)  # if Wikipedia makes a guess
+            except KeyError:  # if Wikipedia can't figure out what we tried to search for
                 suggestions = None
-            else:  # add results to suggestions
-                for page in json_data["query"]["search"]:
-                    suggestions.append(page)
-    return correct_title, suggestions
+        else:  # add results to suggestions
+            for page in json_data["query"]["search"]:
+                suggestions.append(page)
+    return suggestions
 
 
 def get_links(page_name, num_links=None):
@@ -51,14 +47,13 @@ def get_links(page_name, num_links=None):
         how many links to get from the page, by default None (get all links)
     """
     pl = []
-    links_complete = False
     plcontinue = None
     pllimit = num_links
     if num_links is None or num_links > 500:  # max allowed by mediawiki api
         pllimit = 500
 
     with requests.Session() as sess:
-        while not links_complete:
+        while True:
             params = {
                 "action": "query",
                 "format": "json",
@@ -73,33 +68,36 @@ def get_links(page_name, num_links=None):
             json_data = resp.json()
 
             page = json_data["query"]["pages"].popitem()
-            links = page[1]["links"]
+            try:
+                links = page[1]["links"]
+            except KeyError:
+                logging.error("Unable to get links for page %s", page_name)
+                return pl  # will be empty list to fall through for loop
             for link in links:
-                if link["ns"] != 0:
-                    print("skipped: {}".format(link["title"]))
-                else:
+                if link["ns"] == 0:
                     pl.append(link["title"])
                     if len(pl) == num_links:
-                        links_complete = True
+                        return pl
             try:
                 plcontinue = json_data["continue"]["plcontinue"]
-                print("plcontinue: {}".format(plcontinue))
+                logging.info("%s plcontinue: %s", page_name, plcontinue)
             except KeyError:
-                links_complete = True
-    return pl
+                logging.info("%s has fewer links than %i", page_name, num_links)
+                return pl
 
 
 if __name__ == "__main__":
-    title_query = "python"
-    TITLE, SUGGESTIONS = search_title(title_query)
-    if SUGGESTIONS is None:
-        msg = "The page {} does not exist.\n\nThere were no results matching the query"
-        print(msg.format(title_query))
-    elif TITLE is None:
-        print("render page with suggestions as buttons")
-        for suggestion in SUGGESTIONS:
-            print(suggestion)
-    else:
-        LINKS = get_links(TITLE, num_links=15)
-        print(LINKS)
-        print("render map")
+    # title_query = "elon muskk"
+    # SUGGESTIONS = search_title(title_query)
+    # if SUGGESTIONS is None:
+    #     msg = "The page {} does not exist.\n\nThere were no results matching the query"
+    #     print(msg.format(title_query))
+    # else:
+    #     print("render page with suggestions as buttons")
+    #     for suggestion in SUGGESTIONS:
+    #         print(suggestion)
+
+    TITLE = "Elon Musk"
+    LINKS = get_links(TITLE, num_links=15)
+    print(LINKS)
+    print("render map")

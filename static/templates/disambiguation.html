@@ -13,7 +13,7 @@
         <ul>
             {% for suggestion in suggestions %}
             <li>
-                <a href="maps/{{ url_from_suggestion(suggestion, levels, ppl) }}">
+                <a href="map/{{ url_from_suggestion(suggestion, levels, ppl) }}">
                     {{ suggestion.title }}</a>: {{ suggestion.snippet }}
             </li>
             {% endfor %}

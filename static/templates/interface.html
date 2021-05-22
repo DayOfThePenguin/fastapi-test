@@ -15,14 +15,36 @@
   <div id="3d-graph"></div>
 
   <script>
+    var centered = "";
     const distance = 1800;
     const jsonURL = "/json/{{ url_for_wikimap(map) }}";
     const Graph = ForceGraph3D()
       (document.getElementById("3d-graph"))
       .jsonUrl(jsonURL)
-      .nodeLabel("id")
+      .nodeLabel("name")
       .nodeAutoColorBy("group")
-      .onNodeClick(node => window.open(("https://en.wikipedia.org/wiki/" + node.id), "_blank"));
+      .onNodeClick(node => {
+        console.log(centered);
+        if (centered === node.name) {
+          window.open(("https://en.wikipedia.org/wiki/" + node.name), "_blank")
+        } else {
+          // Aim at node from outside it
+          const distance = 40;
+          const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+          Graph.cameraPosition({
+              x: node.x * distRatio,
+              y: node.y * distRatio,
+              z: node.z * distRatio
+            }, // new position
+            node, // lookAt ({ x, y, z })
+            3000 // ms transition duration
+          );
+        }
+        centered = node.name;
+        console.log(centered);
+      });
+
   </script>
 </body>
 

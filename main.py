@@ -76,12 +76,12 @@ async def search(
     levels: int = Form(DEFAULT_LEVELS),
     ppl: int = Form(DEFAULT_PPL),
 ):
-    TITLE, SUGGESTIONS = utils.scratch.search_title(title_query)
+    SUGGESTIONS = utils.scratch.search_title(title_query)
     if SUGGESTIONS is None:
         return TEMPLATES.TemplateResponse(
             "err_no_page.html", {"request": request, "title_query": title_query}
         )
-    elif TITLE is None:
+    else:
         return TEMPLATES.TemplateResponse(
             "disambiguation.html",
             {
@@ -92,9 +92,6 @@ async def search(
                 "title_query": title_query,
             },
         )
-    else:
-        LINKS = utils.scratch.get_links(TITLE, num_links=15)
-        return LINKS
 
 
 @app.get("/json/{title}")
@@ -116,7 +113,7 @@ async def get_json(
             return result.json_data
 
 
-@app.get("/maps/{title}")
+@app.get("/map/{title}")
 async def graph_json(
     request: Request,
     title: str,

@@ -92,6 +92,7 @@ def get_all(db):
 
 if __name__ == "__main__":
     database = Database(sslmode=False)
+    # delete_recreate_database(database.DATABASE_URI)
     create_sample_entries(database.Session)
     results = get_all(database)
     print(results)
