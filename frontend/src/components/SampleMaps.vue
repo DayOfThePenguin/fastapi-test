@@ -20,7 +20,7 @@
                       map.title
                     }}</a>
                   </td>
-                  <td>{{ map.pages_per_level ** map.levels }}</td>
+                  <td>{{ map.lpp ** map.levels }}</td>
                 </tr>
                 {% endfor %}
               </tbody>

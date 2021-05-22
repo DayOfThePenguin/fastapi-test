@@ -1,22 +1,26 @@
+import asyncio
 import logging
 
 from fastapi import FastAPI, Form, HTTPException, Query
 from starlette.requests import Request
-from starlette.responses import HTMLResponse, RedirectResponse
+from starlette.responses import RedirectResponse
+from starlette.routing import Mount
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from starlette.routing import Mount
+from starlette.websockets import WebSocket
 from sqlalchemy.exc import OperationalError
 
 
 from database.db import Database
 from database.models import WikiMap
 import utils.scratch
+from utils.wikigraph import WikipediaGraph
 
+YIELD_SIZE = 15
 DEFAULT_LEVELS = 3
-DEFAULT_PPL = 8
+DEFAULT_LPP = 8
 MAX_LEVELS = 5
-MAX_PPL = 16
+MAX_LPP = 16
 TEMPLATES = Jinja2Templates(directory="static/templates")
 
 
@@ -32,18 +36,18 @@ def create_app() -> FastAPI:
             app=StaticFiles(directory="frontend/dist/js"),
             name="js",
         ),
-        # Mount(
-        #     "/css",
-        #     app=StaticFiles(directory="frontend/dist/css"),
-        #     name="css",
-        # ),
+        Mount(
+            "/css",
+            app=StaticFiles(directory="frontend/dist/css"),
+            name="css",
+        ),
         Mount(
             "/img",
             app=StaticFiles(directory="frontend/dist/img"),
             name="img",
         ),
     ]
-    new_app = FastAPI(title="WikiMap", version="0.0.2", debug=True, routes=routes)
+    new_app = FastAPI(title="WikiMap", version="0.0.2", debug=False, routes=routes)
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     new_app.logger = logger
@@ -74,41 +78,36 @@ async def search(
     request: Request,
     title_query: str = Form(...),
     levels: int = Form(DEFAULT_LEVELS),
-    ppl: int = Form(DEFAULT_PPL),
+    lpp: int = Form(DEFAULT_LPP),
 ):
-    TITLE, SUGGESTIONS = utils.scratch.search_title(title_query)
+    SUGGESTIONS = utils.scratch.search_title(title_query)
     if SUGGESTIONS is None:
         return TEMPLATES.TemplateResponse(
             "err_no_page.html", {"request": request, "title_query": title_query}
         )
-    elif TITLE is None:
+    else:
         return TEMPLATES.TemplateResponse(
             "disambiguation.html",
             {
                 "request": request,
                 "suggestions": SUGGESTIONS,
                 "levels": levels,
-                "ppl": ppl,
+                "lpp": lpp,
                 "title_query": title_query,
             },
         )
-    else:
-        LINKS = utils.scratch.get_links(TITLE, num_links=15)
-        return LINKS
 
 
 @app.get("/json/{title}")
 async def get_json(
     title: str,
-    levels: int = Query(..., gt=0, lt=MAX_LEVELS),
-    ppl: int = Query(..., gt=0, lt=MAX_PPL),
+    levels: int = Query(DEFAULT_LEVELS, gt=0, lt=MAX_LEVELS),
+    lpp: int = Query(DEFAULT_LPP, gt=0, lt=MAX_LPP),
 ):
     title = title.replace("_", " ")
     with app.db.Session() as sess:
         result = (
-            sess.query(WikiMap)
-            .filter_by(title=title, levels=levels, pages_per_level=ppl)
-            .first()
+            sess.query(WikiMap).filter_by(title=title, levels=levels, lpp=lpp).first()
         )
         if result is None:
             raise HTTPException(status_code=404, detail="json doesn't exist")
@@ -116,24 +115,56 @@ async def get_json(
             return result.json_data
 
 
-@app.get("/maps/{title}")
+@app.websocket("/json/{title}/ws")
+async def websocket_endpoint(title: str, websocket: WebSocket):
+    title = title.replace("_", " ")
+    graph = None
+    gen = None
+    sess = app.db.Session()
+    result = sess.query(WikiMap).filter_by(title=title).first()
+    logging.info("Database query returned %s", result)
+    if result is None:
+        graph = WikipediaGraph(title, levels=DEFAULT_LEVELS, lpp=DEFAULT_LPP)
+        gen = graph.generate(yield_size=YIELD_SIZE)
+        logging.info("Map %s doesn't exist in db", title)
+    else:
+        graph = WikipediaGraph(result.title, levels=result.levels, lpp=result.lpp)
+        gen = graph.generate_from_wikimap(result, yield_size=YIELD_SIZE)
+        logging.info("Map %s exists in db", title)
+    await websocket.accept()
+    steps = 0
+    delay = [1.5, 1, 0.75]
+    for json_chunk in gen:
+        await websocket.send_json(json_chunk)
+        if steps < 3:
+            await asyncio.sleep(delay[0])
+        elif steps < 5:
+            await asyncio.sleep(delay[1])
+        else:
+            await asyncio.sleep(delay[2])
+        steps += 1
+    await websocket.close(code=1000)
+    if result is None:
+        page_map = WikiMap(
+            title=graph.start_page,
+            json_data=graph.get_json_dict(),
+            levels=graph.levels,
+            lpp=graph.lpp,
+        )
+        sess.add(page_map)
+        sess.commit()
+        sess.close()
+        logging.info("Added missing map %s to db", title)
+
+
+@app.get("/map/{title}")
 async def graph_json(
     request: Request,
     title: str,
-    levels: int = Query(..., gt=0, lt=MAX_LEVELS),
-    ppl: int = Query(..., gt=0, lt=MAX_PPL),
+    levels: int = Query(DEFAULT_LEVELS, gt=0, lt=MAX_LEVELS),
+    lpp: int = Query(DEFAULT_LPP, gt=0, lt=MAX_LPP),
 ):
     title = title.replace("_", " ")
-    with app.db.Session() as sess:
-        app.logger.info("%s, %i, %i", title, levels, ppl)
-        result = (
-            sess.query(WikiMap)
-            .filter_by(title=title, levels=levels, pages_per_level=ppl)
-            .first()
-        )
-        if result is None:
-            raise HTTPException(status_code=404, detail="map doesn't exist")
-        else:
-            return TEMPLATES.TemplateResponse(
-                "interface.html", {"request": request, "map": result}
-            )
+    return TEMPLATES.TemplateResponse(
+        "websocket.html", {"request": request, "title": title}
+    )

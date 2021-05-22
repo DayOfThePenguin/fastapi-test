@@ -19,7 +19,7 @@ class WikiMap(BASE):
     title = Column(String(200), primary_key=True, index=True)
     json_data = Column(JSON())
     levels = Column(SmallInteger())
-    pages_per_level = Column(SmallInteger())
+    lpp = Column(SmallInteger())
 
     def __repr__(self):
         msg = "<WikiMap: (\n\t"
@@ -27,6 +27,6 @@ class WikiMap(BASE):
         msg += "title='{}',\n\t".format(self.title)
         msg += "json_data - not displayed,\n\t"
         msg += "levels={},\n\t".format(self.levels)
-        msg += "pages_per_level={}\n".format(self.pages_per_level)
+        msg += "lpp (links per page)={}\n".format(self.lpp)
         msg += ")>"
         return msg
