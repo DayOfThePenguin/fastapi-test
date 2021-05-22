@@ -7,7 +7,7 @@ from sqlalchemy.engine import create_engine
 
 from database.models import WikiMap
 from database.db import Database
-from database import models
+from database import models, config
 
 Base = models.BASE
 
@@ -30,7 +30,7 @@ def create_sample_entries(session_maker):
     json_files = []
 
     for page_map in maps:
-        print(str(map))
+        print(str(page_map))
         results = pattern.split(str(page_map))
         titles.append(results[1].replace("_", " "))
         levels.append(results[2])
@@ -97,3 +97,6 @@ if __name__ == "__main__":
     results = get_all(database)
     print(results)
     database.close()
+
+    # prod_url = config.get_production_config_locally()
+    # database = Database(prod_url)

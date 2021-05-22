@@ -20,7 +20,16 @@
 <body>
     <div id="3d-graph"></div>
     <script>
-        var ws = new WebSocket("ws://localhost:8000/ws");
+        var loc = window.location, new_uri;
+        if (loc.protocol === "https:") {
+            new_uri = "wss:";
+        } else {
+            new_uri = "ws:";
+        }
+        new_uri += "//" + loc.host;
+        new_uri += "/json/" + "{{ title.replace(' ', '_') }}" + "/ws";
+
+        var ws = new WebSocket(new_uri);
         const initData = {
             nodes: [],
             links: []
@@ -33,7 +42,7 @@
             .nodeAutoColorBy("group")
             .graphData(initData)
             .onNodeClick(node => {
-                console.log(centered);
+                // console.log(centered);
                 if (centered === node.name) {
                     window.open(("https://en.wikipedia.org/wiki/" + node.name), "_blank")
                 } else {
@@ -51,7 +60,7 @@
                     );
                 }
                 centered = node.name;
-                console.log(centered);
+                // console.log(centered);
             });
 
         force = d3.forceManyBody();
@@ -64,8 +73,8 @@
             const jsonMessage = JSON.parse(event.data);
             const newNodes = jsonMessage.nodes;
             const newLinks = jsonMessage.links;
-            console.log(newNodes);
-            console.log(newLinks);
+            // console.log(newNodes);
+            // console.log(newLinks);
             const {
                 nodes,
                 links

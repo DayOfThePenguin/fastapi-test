@@ -2,7 +2,6 @@ import json
 import logging
 
 import igraph
-import unidecode
 
 from database.models import WikiMap
 
@@ -162,15 +161,7 @@ class WikipediaGraph(igraph.Graph):
         except ValueError:
             return False
 
-    def write(self):
-        """write graph to file
-
-        use the json format that 3d-force-directed-graph can read
-        """
-        page_name = self.start_page.replace(" ", "_")
-        file_name = "static/sample_data/{}_l_{}_lpp_{}.json".format(
-            page_name, self.levels, self.lpp
-        )
+    def get_json_dict(self):
         graph_json = {}
         graph_json["nodes"] = []
         graph_json["links"] = []
@@ -186,6 +177,18 @@ class WikipediaGraph(igraph.Graph):
                     "value": 1,
                 }
             )
+        return graph_json
+
+    def write_json(self):
+        """write graph to file
+
+        use the json format that 3d-force-directed-graph can read
+        """
+        graph_json = self.get_json_dict()
+        page_name = self.start_page.replace(" ", "_")
+        file_name = "static/sample_data/{}_l_{}_lpp_{}.json".format(
+            page_name, self.levels, self.lpp
+        )
         with open(file_name, "w") as f:
             json.dump(graph_json, f)
         logging.info("Wrote file %s", file_name)

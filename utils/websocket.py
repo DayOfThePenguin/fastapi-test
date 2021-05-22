@@ -40,16 +40,18 @@ try {
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return TEMPLATES.TemplateResponse("websocket.html", {"request": request})
+    title = "COVID-19 pandemic"
+    return TEMPLATES.TemplateResponse(
+        "websocket.html", {"request": request, "title": title}
+    )
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/json/{title}/ws")
+async def websocket_endpoint(title: str, websocket: WebSocket):
+    title = title.replace("_", " ")
     database = Database(sslmode=False)
     with database.Session() as sess:
-        result = (
-            sess.query(WikiMap).filter_by(title="COVID-19 pandemic", lpp=12).first()
-        )
+        result = sess.query(WikiMap).filter_by(title=title, lpp=12).first()
         logging.info(result)
     graph = WikipediaGraph("Elon Musk", levels=3, lpp=12)
     await websocket.accept()

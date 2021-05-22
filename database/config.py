@@ -75,5 +75,5 @@ def get_production_config_locally():
     production_config = ConfigParser()
     production_config.read_file(open(config_path))
     database_uri = production_config["postgres"]["DATABASE_URL"]
-    database_uri = make_sqlalchemy_uri(database_uri)
+    database_uri = make_sqlalchemy_uri(database_uri, sslmode=True)
     return database_uri

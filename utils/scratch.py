@@ -1,8 +1,15 @@
 import logging
+import re
 import requests
 
 logging.basicConfig(level=logging.INFO)
 WIKIURL = "https://en.wikipedia.org/w/api.php"
+cleanr = re.compile(r"<.*?>")
+
+
+def cleanhtml(raw_html):
+    cleantext = re.sub(cleanr, "", raw_html)
+    return cleantext
 
 
 def search_title(title_guess):
@@ -25,7 +32,9 @@ def search_title(title_guess):
                 suggestions = None
         else:  # add results to suggestions
             for page in json_data["query"]["search"]:
+                page["snippet"] = cleanhtml(page["snippet"])
                 suggestions.append(page)
+
     return suggestions
 
 
@@ -87,17 +96,17 @@ def get_links(page_name, num_links=None):
 
 
 if __name__ == "__main__":
-    # title_query = "elon muskk"
-    # SUGGESTIONS = search_title(title_query)
-    # if SUGGESTIONS is None:
-    #     msg = "The page {} does not exist.\n\nThere were no results matching the query"
-    #     print(msg.format(title_query))
-    # else:
-    #     print("render page with suggestions as buttons")
-    #     for suggestion in SUGGESTIONS:
-    #         print(suggestion)
+    title_query = "elon muskk"
+    SUGGESTIONS = search_title(title_query)
+    if SUGGESTIONS is None:
+        msg = "The page {} does not exist.\n\nThere were no results matching the query"
+        print(msg.format(title_query))
+    else:
+        print("render page with suggestions as buttons")
+        for suggestion in SUGGESTIONS:
+            print(suggestion)
 
-    TITLE = "Elon Musk"
-    LINKS = get_links(TITLE, num_links=15)
-    print(LINKS)
-    print("render map")
+    # TITLE = "Elon Musk"
+    # LINKS = get_links(TITLE, num_links=15)
+    # print(LINKS)
+    # print("render map")
