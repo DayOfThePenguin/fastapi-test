@@ -37,17 +37,24 @@ def create_app() -> FastAPI:
             name="js",
         ),
         Mount(
-            "/css",
-            app=StaticFiles(directory="frontend/dist/css"),
-            name="css",
-        ),
-        Mount(
             "/img",
             app=StaticFiles(directory="frontend/dist/img"),
             name="img",
         ),
     ]
     new_app = FastAPI(title="WikiMap", version="0.0.2", debug=False, routes=routes)
+    try:
+        new_app.routes.append(
+            Mount(
+                "/css",
+                app=StaticFiles(directory="frontend/dist/css"),
+                name="css",
+            )
+        )
+    except RuntimeError:
+        logging.warning(
+            "can't find frontend/dist/css, frontend is running in DEBUG mode"
+        )
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     new_app.logger = logger
