@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Graph Test</title>
+    <style>
+        body {
+            margin: 0;
+        }
+    </style>
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <script src="https://d3js.org/d3-dispatch.v2.min.js"></script>
+    <script src="https://d3js.org/d3-timer.v2.min.js"></script>
+    <script src="https://d3js.org/d3-quadtree.v2.min.js"></script>
+    <script src="https://unpkg.com/d3-binarytree"></script>
+    <script src="https://unpkg.com/d3-octree"></script>
+    <script src="https://unpkg.com/d3-force-3d"></script>
+</head>
+
+<body>
+    <div id="3d-graph"></div>
+    <script>
+        var ws = new WebSocket("ws://localhost:8000/ws");
+        const initData = {
+            nodes: [],
+            links: []
+        };
+        var centered = "";
+        const elem = document.getElementById("3d-graph");
+        const Graph = ForceGraph3D()(elem)
+            .d3VelocityDecay(.7)
+            .nodeLabel("name")
+            .nodeAutoColorBy("group")
+            .graphData(initData)
+            .onNodeClick(node => {
+                console.log(centered);
+                if (centered === node.name) {
+                    window.open(("https://en.wikipedia.org/wiki/" + node.name), "_blank")
+                } else {
+                    // Aim at node from outside it
+                    const distance = 40;
+                    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+
+                    Graph.cameraPosition({
+                            x: node.x * distRatio,
+                            y: node.y * distRatio,
+                            z: node.z * distRatio
+                        }, // new position
+                        node, // lookAt ({ x, y, z })
+                        3000 // ms transition duration
+                    );
+                }
+                centered = node.name;
+                console.log(centered);
+            });
+
+        force = d3.forceManyBody();
+        force.distanceMax(250);
+        // console.log(force);
+
+        Graph.d3Force("charge", force);
+
+        ws.onmessage = function (event) {
+            const jsonMessage = JSON.parse(event.data);
+            const newNodes = jsonMessage.nodes;
+            const newLinks = jsonMessage.links;
+            console.log(newNodes);
+            console.log(newLinks);
+            const {
+                nodes,
+                links
+            } = Graph.graphData();
+
+            Graph.graphData({
+                nodes: [...nodes, ...newNodes],
+                links: [...links, ...newLinks]
+            });
+        };
+    </script>
+</body>
+
+</html>

@@ -1,6 +1,9 @@
+import logging
 from fastapi import FastAPI
+from starlette.requests import Request
 from starlette.websockets import WebSocket
 from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
 
 import asyncio
 
@@ -10,52 +13,14 @@ from utils.wikigraph import WikipediaGraph
 
 app = FastAPI()
 
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Graph Test</title>
-        <style>
-        body { margin: 0; }
-        </style>
-    <script src="//unpkg.com/3d-force-graph"></script>
-    </head>
-    <body>
-        <div id="3d-graph"></div>
-        <script>
-            var ws = new WebSocket("ws://localhost:8000/ws");
-            const initData = {
-                nodes: [],
-                links: []
-            };
-
-            const elem = document.getElementById("3d-graph");
-            const Graph = ForceGraph3D()(elem)
-                .nodeLabel("name")
-                .nodeAutoColorBy("group")
-                .graphData(initData);
-
-            ws.onmessage = function(event) {
-                const jsonMessage = JSON.parse(event.data);
-                const newNodes = jsonMessage.nodes;
-                const newLinks = jsonMessage.links;
-                console.log(newNodes);
-                console.log(newLinks);
-                const { nodes, links } = Graph.graphData();
-
-                Graph.graphData({
-                    nodes: [...nodes, ...newNodes],
-                    links: [...links, ...newLinks]
-                }); 
-            };
-        </script>
-    </body>
-</html>
-"""
+TEMPLATES = Jinja2Templates(directory="../static/templates")
 
 
 """
-               
+          var simulation = d3.forceSimulation(nodes)
+                .force("charge", d3.forceManyBody())
+                .force("link", d3.forceLink(links))
+                .force("center", d3.forceCenter());     
 
 
 
@@ -73,20 +38,30 @@ try {
 """
 
 
-@app.get("/")
-async def get():
-    return HTMLResponse(html)
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return TEMPLATES.TemplateResponse("websocket.html", {"request": request})
 
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     database = Database(sslmode=False)
     with database.Session() as sess:
-        result = sess.query(WikiMap).filter_by(title="Elon Musk").first()
-
+        result = (
+            sess.query(WikiMap).filter_by(title="COVID-19 pandemic", lpp=12).first()
+        )
+        logging.info(result)
     graph = WikipediaGraph("Elon Musk", levels=3, lpp=12)
     await websocket.accept()
-    for json_chunk in graph.generate_from_wikimap(result, yield_size=5):
+    steps = 0
+    delay = [1.5, 1, 0.75]
+    for json_chunk in graph.generate_from_wikimap(result, yield_size=15):
         await websocket.send_json(json_chunk)
-        await asyncio.sleep(1)
+        if steps < 3:
+            await asyncio.sleep(delay[0])
+        elif steps < 5:
+            await asyncio.sleep(delay[1])
+        else:
+            await asyncio.sleep(delay[2])
+        steps += 1
     await websocket.close(code=1000)

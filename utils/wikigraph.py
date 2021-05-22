@@ -87,32 +87,41 @@ class WikipediaGraph(igraph.Graph):
     def generate_from_wikimap(self, wikimap: WikiMap, yield_size=10):
         nodes = wikimap.json_data["nodes"]
         links = wikimap.json_data["links"]
+        min_vertex_id = len(nodes)
+        max_vertex_id = 0
         while True:
+            if len(nodes) == 0 and len(links) == 0:
+                return None
             graph_json = {}
             graph_json["nodes"] = []
             graph_json["links"] = []
-            try:
-                node = nodes.pop(0)
-                graph_json["nodes"].append(node)
-            except IndexError:
-                graph_json["links"].extend(links)
-                yield graph_json
-                return None
-            for i in range(yield_size):
+            for _ in range(yield_size):
                 try:
                     node = nodes.pop(0)
                     graph_json["nodes"].append(node)
+                    if node["id"] > max_vertex_id:
+                        max_vertex_id = node["id"]
+                    if node["id"] < min_vertex_id:
+                        min_vertex_id = node["id"]
                 except IndexError:
-                    graph_json["links"].extend(links)
-                    yield graph_json
-                    return None
-                try:
-                    link = links.pop(0)
-                    graph_json["links"].append(link)
-                except IndexError:
-                    graph_json["nodes"].extend(nodes)
-                    yield graph_json
-                    return None
+                    break
+            pop_indices = []
+            for i in range(len(links)):
+                valid_source = (
+                    links[i]["source"] <= max_vertex_id
+                    and links[i]["source"] >= min_vertex_id
+                )
+                valid_target = (
+                    links[i]["target"] <= max_vertex_id
+                    and links[i]["target"] >= min_vertex_id
+                )
+                if valid_source and valid_target:
+                    graph_json["links"].append(links[i])
+                    pop_indices.append(i)
+            pop_indices = sorted(pop_indices, reverse=True)
+            for idx in pop_indices:
+                links.pop(idx)
+
             yield graph_json
 
     def _json_chunk(self, new_vertices, new_edges):
@@ -183,8 +192,17 @@ class WikipediaGraph(igraph.Graph):
 
 
 if __name__ == "__main__":
-    graph = WikipediaGraph("Neuroscience", levels=4, lpp=8)
-    for json_chunk in graph.generate():
-        pass
-        # print(json.dumps(json_chunk, indent=2, separators=(",", ": ")))
-    graph.write()
+    # graph = WikipediaGraph("Neuroscience", levels=4, lpp=8)
+    # for json_chunk in graph.generate():
+    #     pass
+    #     # print(json.dumps(json_chunk, indent=2, separators=(",", ": ")))
+    # graph.write()
+    from database.db import Database
+
+    database = Database(sslmode=False)
+    with database.Session() as sess:
+        result = sess.query(WikiMap).filter_by(title="COVID-19 pandemic", lpp=2).first()
+        logging.info(result)
+    graph = WikipediaGraph("COVID-19 pandemic", levels=2, lpp=2)
+    for json_chunk in graph.generate_from_wikimap(result, yield_size=5):
+        print(json_chunk)
