@@ -18,7 +18,6 @@ new Vue({
     // eslint-disable-next-line no-unused-vars
     const ag = new AtomGraph
     ag.setHome()
-    // showDialog();
   },
   render: h => h(App)
 }).$mount('#app')

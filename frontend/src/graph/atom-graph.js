@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import ForceGraph3D from '3d-force-graph';
 import SpriteText from 'three-spritetext';
 import home from './home.json';
@@ -8,13 +9,28 @@ class AtomGraph {
         this.Graph = ForceGraph3D()(document.getElementById('graph_elem'))
           .nodeAutoColorBy('group')
           .nodeThreeObject(node => {
+            if (node.name === "WikiMap") {
+              const imgTexture = new THREE.TextureLoader().load(`/static/img/wikimap.png`);
+              const material = new THREE.SpriteMaterial({ map: imgTexture });
+              const sprite = new THREE.Sprite(material);
+              sprite.scale.set(50, 14);
+              return sprite;
+            }
+            else {
             const sprite = new SpriteText(node.name);
             sprite.material.depthWrite = false; // make sprite background transparent
             sprite.color = node.color;
             sprite.textHeight = 8;
             return sprite;
+          }
           })
-          .nodeThreeObjectExtend(true)
+          .nodeThreeObjectExtend(node => {
+            if (node.name === "WikiMap") {
+              return false;}
+            else {
+              return true;
+            }
+          })
           .nodeOpacity(.8)
           .nodeResolution(32);
   
@@ -47,8 +63,8 @@ class AtomGraph {
         }
         )
     }
-        
 
-}
+  }
+        
 
 export default AtomGraph
