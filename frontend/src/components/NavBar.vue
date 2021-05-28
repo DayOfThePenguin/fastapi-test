@@ -5,7 +5,7 @@
         color="primary"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
-      <v-btn icon color="primary" v-bind="attrs" v-on="on">
+      <v-btn icon color="primary" @click="clickSearchToggle">
         <v-icon>mdi-magnify</v-icon>
       </v-btn>
       <v-btn icon color="primary">
@@ -77,6 +77,11 @@ export default {
     drawer: false,
     group: null,
   }),
+  methods: {
+    clickSearchToggle() {
+      document.getElementById("searchToggle").dispatchEvent(new Event("click"));
+    },
+  },
 
   watch: {
     group() {
@@ -87,7 +92,6 @@ export default {
 </script>
 <style scoped>
 #searchToggle {
-  width: 0px;
-  height: 0px;
+  display: none;
 }
 </style>

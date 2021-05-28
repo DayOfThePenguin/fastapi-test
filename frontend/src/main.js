@@ -8,11 +8,6 @@ Vue.config.productionTip = false
 new Vue({
   vuetify,
   methods: {
-    showDialog: function() {
-      
-      var elem = this.$els.toggleDialog;
-      console.log(elem);
-    }
   },
   mounted() {
     // eslint-disable-next-line no-unused-vars
