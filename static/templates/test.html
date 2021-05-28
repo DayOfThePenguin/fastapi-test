@@ -27,9 +27,9 @@
             new_uri = "ws:";
         }
         new_uri += "//" + loc.host;
-        new_uri += "/json/" + "{{ title.replace(' ', '_') }}" + "/ws";
+        new_uri += "/home/ws";
 
-        
+        console.log(new_uri);
         var ws = new WebSocket(new_uri);
         const initData = {
             nodes: [],
@@ -41,28 +41,7 @@
             .d3VelocityDecay(.7)
             .nodeLabel("name")
             .nodeAutoColorBy("group")
-            .graphData(initData)
-            .onNodeClick(node => {
-                // console.log(centered);
-                if (centered === node.name) {
-                    window.open(("https://en.wikipedia.org/wiki/" + node.name), "_blank")
-                } else {
-                    // Aim at node from outside it
-                    const distance = 40;
-                    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
-
-                    Graph.cameraPosition({
-                            x: node.x * distRatio,
-                            y: node.y * distRatio,
-                            z: node.z * distRatio
-                        }, // new position
-                        node, // lookAt ({ x, y, z })
-                        3000 // ms transition duration
-                    );
-                }
-                centered = node.name;
-                // console.log(centered);
-            });
+            .graphData(initData);
 
         force = d3.forceManyBody();
         force.distanceMax(250);

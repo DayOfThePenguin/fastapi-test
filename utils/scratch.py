@@ -7,19 +7,58 @@ WIKIURL = "https://en.wikipedia.org/w/api.php"
 cleanr = re.compile(r"<.*?>")
 
 
-def cleanhtml(raw_html):
+def cleanhtml(raw_html: str) -> str:
+    """removes html tags from a string
+
+    Parameters
+    ----------
+    raw_html : str
+        string with possible html tags in it
+
+    Returns
+    -------
+    cleantext : str
+        string with any html tags replaced with ""
+    """
     cleantext = re.sub(cleanr, "", raw_html)
     return cleantext
 
 
-def search_title(title_guess):
+def search_title(title_guess: str, srlimit: int = 5):
+    """searches a mediawiki for articles with the title title_guess
+
+    there are 3 outcomes:
+    1. the mediawiki has results for the page, and returns at most the top
+       srlimit suggestions.
+    2. the mediawiki has no results for the exact title_guess, but it suggests
+       a likely alternative to the title_guess. in this case, we recursively call
+       this function again and get at most the top srlimit suggestions for the
+       mediawiki's suggested new_guess.
+    3. the mediawiki has no results and no suggestions for alternative queries.
+       in this case, suggestions will be None.
+
+    Parameters
+    ----------
+    title_guess : str
+        the string you want to search the mediawiki for
+
+    srlimit : int (Default 5)
+        how many search results to get, at maximum (not all pages will have srlimit
+        results available)
+
+    Returns
+    -------
+    suggestions : List[Dict] or None
+        - List of dicts if there are results for title_guess in the mediawiki.
+        - None if there are no results for title_guess in the mediawiki
+    """
     suggestions = []
     with requests.Session() as sess:
         params = {
             "action": "query",
             "format": "json",
             "list": "search",
-            "srlimit": "5",
+            "srlimit": str(srlimit),
             "srsearch": title_guess.replace(" ", "_"),
         }
         resp = sess.get(url=WIKIURL, params=params)
@@ -34,12 +73,11 @@ def search_title(title_guess):
             for page in json_data["query"]["search"]:
                 page["snippet"] = cleanhtml(page["snippet"])
                 suggestions.append(page)
-
     return suggestions
 
 
 def get_links(page_name, num_links=None):
-    """fetch num_links links from a MediaWiki page.
+    """fetch num_links links from a MediaWiki page named page_name
 
     if num_links is None, get all links on the page. the mediawiki api supports
     requesting data for multiple pages at once, but this implementation will only
