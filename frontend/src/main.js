@@ -7,12 +7,10 @@ Vue.config.productionTip = false
 
 new Vue({
   vuetify,
-  methods: {
-  },
-  mounted() {
-    // eslint-disable-next-line no-unused-vars
-    const ag = new AtomGraph
-    ag.setHome()
-  },
+  methods: {},
+  mounted() {},
   render: h => h(App)
 }).$mount('#app')
+
+const ag = new AtomGraph
+ag.setHome()

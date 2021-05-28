@@ -9,11 +9,9 @@
         },
         {
             "id": 1,
-            "name": "Search",
-            "group": 1,
-            "val": 15,
-            "color": "#FF6859"
-            
+            "name": "About",
+            "group": 3,
+            "color": "#045D56"
         },
         {
             "id": 2,
@@ -21,19 +19,19 @@
             "group": 2,
             "val": 5,
             "color": "#045D56"
-            
         },
         {
             "id": 3,
-            "name": "About",
-            "group": 3,
+            "name": "Bug Reports",
+            "group": 4,
             "color": "#045D56"
         },
         {
             "id": 4,
-            "name": "Bug Reports",
-            "group": 4,
-            "color": "#045D56"
+            "name": "Search",
+            "group": 1,
+            "val": 15,
+            "color": "#FF6859"
         }
     ],
     "links": [{

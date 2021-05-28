@@ -57,16 +57,21 @@ async def websocket_endpoint(title: str, websocket: WebSocket):
         logging.info("Added missing map %s to db", title)
 
 
-@router.websocket("/home")
+@router.websocket("/ws")
 async def home_websocket(websocket: WebSocket):
-    home_data = json.loads("static/maps/home.json")
+    await websocket.accept()
+    # action_json = await websocket.receive_json()
+    # print(action_json)
+
+    with open("static/maps/home.json", "r") as json_file:
+        home_data = json.load(json_file)
     home_map = WikiMap(title="home", json_data=home_data, levels=2, lpp=1)
     graph = WikipediaGraph(home_map, levels=2, lpp=1)
     gen = graph.generate_from_wikimap(home_map, yield_size=1)
-    await websocket.accept()
 
-    delay = 0.5
+    delay = 0.75
     for json_chunk in gen:
         await websocket.send_json(json_chunk)
         await asyncio.sleep(delay)
+    print(home_data)
     await websocket.close(code=1000)
