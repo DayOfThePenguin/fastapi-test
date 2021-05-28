@@ -7,18 +7,10 @@ Vue.config.productionTip = false
 
 new Vue({
   vuetify,
-  methods: {
-    showDialog: function() {
-      
-      var elem = this.$els.toggleDialog;
-      console.log(elem);
-    }
-  },
-  mounted() {
-    // eslint-disable-next-line no-unused-vars
-    const ag = new AtomGraph
-    ag.setHome()
-    // showDialog();
-  },
+  methods: {},
+  mounted() {},
   render: h => h(App)
 }).$mount('#app')
+
+const ag = new AtomGraph
+ag.setHome()

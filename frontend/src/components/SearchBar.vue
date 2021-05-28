@@ -3,8 +3,15 @@
     <v-form action="/search" method="post">
       <v-row justify="center" cols="12">
         <v-col cols="12">
-          <v-text-field name="title_query" color="primary" clearable rounded filled label="Search Wikipedia"
-            prepend-inner-icon="mdi-magnify">
+          <v-text-field
+            name="title_query"
+            color="primary"
+            clearable
+            rounded
+            filled
+            label="Search Wikipedia"
+            prepend-inner-icon="mdi-magnify"
+          >
           </v-text-field>
         </v-col>
       </v-row>
@@ -14,8 +21,9 @@
     </v-form>
   </v-container>
 </template>
+
 <script>
-  export default {
-    name: "SearchBar",
-  }
+export default {
+  name: "SearchBar",
+};
 </script>

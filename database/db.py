@@ -1,9 +1,14 @@
+import logging
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 
 import database.config
 from database.models import WikiMap
+
+Base = declarative_base()
 
 
 class Database(object):
@@ -25,16 +30,32 @@ class Database(object):
     def get_available_maps(self):
         sess = self.Session()
         available_maps = sess.query(WikiMap).order_by(WikiMap.title).all()
-        # data_path = Path("static/data")
-        # available_maps = []
-        # for child in data_path.iterdir():
-        #     if child.suffix == ".json":
-        #         available_maps.append(child.stem)
         sess.close()
         return available_maps
 
 
-Base = declarative_base()
+def get_database() -> Database:
+    """get a Database object to be added to the fastapi or router instance
+
+    will default to trying to get an ssl connection to the database, if unable
+    to get an ssl connection, it will still return a non-ssl Database object
+
+    Returns
+    -------
+    db : Database
+        Database object for the fastapi or router instance
+    """
+    try:  # default: try production ssl
+        db = Database()
+        sess = db.Session()
+        sess.query(WikiMap).first()
+        sess.close()
+        logging.info("SSL connection to database SUCCEEDED")
+    except OperationalError:  # happens on local db
+        logging.critical("SSL connection to database FAILED, connecting without SSL")
+        db = Database(sslmode=False)
+    return db
+
 
 if __name__ == "__main__":
     testdb = Database()
