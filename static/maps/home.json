@@ -1,40 +1,80 @@
 {
-    "nodes": [{
+    "nodes": [
+        {
             "id": 0,
-            "name": "WikiMap",
+            "name": "Earth",
             "group": 0,
             "val": 25,
-            "color": "#1EB980",
-            "textcolor": "#1EB980"
+            "color": "#00E676"
         },
         {
             "id": 1,
-            "name": "About",
-            "group": 3,
-            "color": "#045D56"
+            "name": "Life",
+            "group": 0,
+            "val": 20,
+            "color": "#651FFF"
         },
         {
             "id": 2,
-            "name": "GitHub",
-            "group": 2,
-            "val": 5,
-            "color": "#045D56"
+            "name": "Human",
+            "group": 0,
+            "val": 15,
+            "color": "#FFEA00"
         },
         {
             "id": 3,
-            "name": "Bug Reports",
-            "group": 4,
-            "color": "#045D56"
+            "name": "Human History",
+            "group": 0,
+            "val": 10,
+            "color": "#2979FF"
         },
         {
             "id": 4,
-            "name": "Search",
-            "group": 1,
-            "val": 15,
-            "color": "#FF6859"
+            "name": "The Arts",
+            "group": 0,
+            "val": 10,
+            "color": "#FF9100"
+        },
+        {
+            "id": 5,
+            "name": "Language",
+            "group": 0,
+            "val": 10,
+            "color": "#00B0FF"
+        },
+        {
+            "id": 6,
+            "name": "Philosophy",
+            "group": 0,
+            "val": 10,
+            "color": "#FF3D00"
+        },
+        {
+            "id": 7,
+            "name": "Science",
+            "group": 0,
+            "val": 10,
+            "color": "#00E5FF"
+        },
+        {
+            "id": 8,
+            "name": "Math",
+            "group": 0,
+            "val": 10,
+            "color": "#FF1744"
+        },
+        {
+            "id": 9,
+            "name": "Technology",
+            "group": 0,
+            "val": 10,
+            "color": "#1DE9B6"
         }
+
+        
     ],
-    "links": [{
+    "links": [
+        {
             "source": 0,
             "target": 1
         },
@@ -47,8 +87,68 @@
             "target": 3
         },
         {
-            "source": 0,
+            "source": 1,
+            "target": 2
+        },
+        {
+            "source": 1,
+            "target": 6
+        },
+        {
+            "source": 1,
+            "target": 7
+        },
+        {
+            "source": 1,
+            "target": 8
+        },
+        {
+            "source": 2,
+            "target": 3
+        },
+        {
+            "source": 2,
             "target": 4
+        },
+        {
+            "source": 2,
+            "target": 5
+        },
+        {
+            "source": 3,
+            "target": 4
+        },
+        {
+            "source": 3,
+            "target": 5
+        },
+        {
+            "source": 3,
+            "target": 9
+        },
+        {
+            "source": 4,
+            "target": 5
+        },
+        {
+            "source": 5,
+            "target": 6
+        },
+        {
+            "source": 6,
+            "target": 8
+        },
+        {
+            "source": 7,
+            "target": 8
+        },
+        {
+            "source": 7,
+            "target": 9
+        },
+        {
+            "source": 8,
+            "target": 9
         }
     ]
 }
