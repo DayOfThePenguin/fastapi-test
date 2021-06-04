@@ -50,6 +50,15 @@ class AtomGraph {
 
 
     var ws = new WebSocket(new_uri);
+    // eslint-disable-next-line no-unused-vars
+    ws.onopen = (event) => {
+    const initialRequest = {
+      "type": "home",
+    }
+    console.log(JSON.stringify(initialRequest));
+    ws.send(JSON.stringify(initialRequest));
+    }
+    
 
     ws.onmessage = (event) =>  {
       const jsonMessage = JSON.parse(event.data);

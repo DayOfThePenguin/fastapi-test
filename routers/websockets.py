@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from typing import Dict
 
 from fastapi import APIRouter
 from starlette.websockets import WebSocket
@@ -16,7 +17,7 @@ db = get_database()
 
 
 @router.websocket("/json/{title}/ws")
-async def websocket_endpoint(title: str, websocket: WebSocket):
+async def websocket_search(title: str, websocket: WebSocket):
     title = title.replace("_", " ")
     graph = None
     gen = None
@@ -57,21 +58,34 @@ async def websocket_endpoint(title: str, websocket: WebSocket):
         logging.info("Added missing map %s to db", title)
 
 
-@router.websocket("/ws")
-async def home_websocket(websocket: WebSocket):
-    await websocket.accept()
-    # action_json = await websocket.receive_json()
-    # print(action_json)
-
+async def send_home(websocket) -> None:
     with open("static/maps/home.json", "r") as json_file:
         home_data = json.load(json_file)
-    home_map = WikiMap(title="home", json_data=home_data, levels=2, lpp=1)
-    graph = WikipediaGraph(home_map, levels=2, lpp=1)
-    gen = graph.generate_from_wikimap(home_map, yield_size=1)
+        home_map = WikiMap(title="home", json_data=home_data, levels=2, lpp=1)
+        graph = WikipediaGraph(home_map, levels=2, lpp=1)
+        gen = graph.generate_from_wikimap(home_map, yield_size=1)
+        delay = 0.75
+        for json_chunk in gen:
+            await websocket.send_json(json_chunk)
+            await asyncio.sleep(delay)
+        print(home_data)
 
-    delay = 0.75
-    for json_chunk in gen:
-        await websocket.send_json(json_chunk)
-        await asyncio.sleep(delay)
-    print(home_data)
+
+async def handle_request(json_data: Dict, ws: WebSocket) -> Dict:
+    if json_data["type"] == "home":
+        logging.info("sending home data")
+        await send_home(ws)
+        return {"type": "close"}
+
+
+@router.websocket("/ws")
+async def root_websocket(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        json_request = await websocket.receive_json()
+        json_reponse = await handle_request(json_request, websocket)
+        if json_reponse["type"] == "close":
+            break
+        await websocket.send_json(json_reponse)
     await websocket.close(code=1000)
+    logging.info("closed websocket")
