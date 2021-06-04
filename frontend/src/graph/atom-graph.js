@@ -25,14 +25,8 @@ class AtomGraph {
           return sprite;
         }
       })
-      .nodeThreeObjectExtend(node => {
-        if (node.name === "WikiMap") {
-          return false;
-        } else {
-          return true;
-        }
-      })
-      .nodeOpacity(.8)
+      .nodeThreeObjectExtend(true)
+      .nodeOpacity(.6)
       .nodeResolution(32);
 
     // Spread nodes a little wider
@@ -50,7 +44,14 @@ class AtomGraph {
 
 
     var ws = new WebSocket(new_uri);
-
+    // eslint-disable-next-line no-unused-vars
+    ws.onopen = (event) => {
+    const initialRequest = {
+      "type": "home",
+    }
+    console.log(JSON.stringify(initialRequest));
+    ws.send(JSON.stringify(initialRequest));
+    }
     ws.onmessage = (event) =>  {
       const jsonMessage = JSON.parse(event.data);
       const newNodes = jsonMessage.nodes;
@@ -71,7 +72,7 @@ class AtomGraph {
   }
 
   setHome() {
-    const distance = 100;
+    const distance = 200;
     this.Graph.cameraPosition({
       z: distance
     })
@@ -86,18 +87,8 @@ class AtomGraph {
         node, // lookAt ({ x, y, z })
         3000 // ms transition duration
       );
-      if (node.name === "Search") {
-        document.getElementById("searchToggle").dispatchEvent(new Event("click"));
-      }
-      if (node.name === "GitHub") {
-        window.open("https://github.com/DayOfThePenguin/r3th.ink");
-      }
-      if (node.name === "Bug Reports") {
-        window.open("https://github.com/DayOfThePenguin/r3th.ink/issues");
-      }
     });
   }
-
 }
 
 
