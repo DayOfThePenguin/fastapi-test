@@ -4,7 +4,7 @@ from starlette.responses import HTMLResponse
 
 
 from routers import websockets, molecules
-from utils.app_generator import create_app
+from utils.app_generator import create_app, add_static_routes_to_app
 import utils.scratch
 from utils.constants import DEFAULT_LEVELS, DEFAULT_LPP, TEMPLATES
 
@@ -48,3 +48,6 @@ async def search(
                 "title_query": title_query,
             },
         )
+
+
+app = add_static_routes_to_app(app)  # add static routes at the end so

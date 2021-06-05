@@ -9,9 +9,9 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="70mm"
-   height="70mm"
-   viewBox="0 0 70 70"
+   width="55.236008mm"
+   height="61.524124mm"
+   viewBox="0 0 55.236008 61.524124"
    version="1.1"
    id="svg7018"
    sodipodi:docname="favicon.svg"
@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="5.6"
-     inkscape:cx="50.463739"
-     inkscape:cy="123.36889"
+     inkscape:zoom="2.8"
+     inkscape:cx="101.143"
+     inkscape:cy="111.32002"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -54,12 +54,12 @@
      inkscape:groupmode="layer"
      id="layer4"
      inkscape:label="back"
-     transform="translate(-48.645377,-47.092853)" />
+     transform="translate(-57.372597,-51.152425)" />
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-48.645377,-47.092853)">
+     transform="translate(-57.372597,-51.152425)">
     <path
        style="opacity:1;fill:#f25430;fill-opacity:1;stroke:#f25430;stroke-width:0.00931923;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 83.036256,84.419137 c -0.07495,0.03664 -0.133991,0.104602 -0.203204,0.152312 -1.352065,1.080834 -2.704337,2.161458 -4.051626,3.248224 -0.0643,0.04138 0.02219,0.08161 0.05243,0.110836 0.483127,0.406293 0.999407,0.770611 1.503747,1.149621 0.56051,0.413705 1.118969,0.830352 1.683456,1.238592 0.0511,0.0074 0.03464,-0.06802 0.04962,-0.09845 0.214636,-1.176529 0.40801,-2.356831 0.611866,-3.535266 0.127221,-0.74646 0.255349,-1.492764 0.381197,-2.239454 0.0027,-0.01554 -0.0127,-0.02871 -0.02748,-0.02642 z"

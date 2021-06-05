@@ -27,6 +27,7 @@ class AtomGraph {
       })
       .nodeThreeObjectExtend(true)
       .nodeOpacity(.6)
+      .d3VelocityDecay(.55)
       .nodeResolution(32);
 
     // Spread nodes a little wider
@@ -46,26 +47,26 @@ class AtomGraph {
     var ws = new WebSocket(new_uri);
     // eslint-disable-next-line no-unused-vars
     ws.onopen = (event) => {
-    const initialRequest = {
-      "type": "home",
+      const initialRequest = {
+        "type": "home",
+      }
+      console.log(JSON.stringify(initialRequest));
+      ws.send(JSON.stringify(initialRequest));
     }
-    console.log(JSON.stringify(initialRequest));
-    ws.send(JSON.stringify(initialRequest));
-    }
-    ws.onmessage = (event) =>  {
+    ws.onmessage = (event) => {
       const jsonMessage = JSON.parse(event.data);
       const newNodes = jsonMessage.nodes;
       const newLinks = jsonMessage.links;
       console.log(newNodes);
       console.log(newLinks);
       const {
-          nodes,
-          links
+        nodes,
+        links
       } = this.Graph.graphData();
 
       this.Graph.graphData({
-          nodes: [...nodes, ...newNodes],
-          links: [...links, ...newLinks]
+        nodes: [...nodes, ...newNodes],
+        links: [...links, ...newLinks]
       });
     }
     console.log(ws);
