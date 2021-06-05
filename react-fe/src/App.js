@@ -1,14 +1,15 @@
 import theme from './theme';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { ThemeProvider } from '@material-ui/core';
+import PrimarySearchAppBar from './components/PrimarySearchAppBar';
+import GraphView from './components/GraphView';
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div className="App">
-        <h1>Hello world</h1>
-      </div>
+      <PrimarySearchAppBar />
+      <GraphView />
     </ThemeProvider>
   );
 }
