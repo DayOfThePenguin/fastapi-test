@@ -1,4 +1,6 @@
 import logging
+import re
+from typing import Dict
 
 from fastapi import FastAPI
 from starlette.routing import Mount
@@ -23,13 +25,13 @@ def get_logging_config() -> logging.Logger:
 def get_static_routes():
     """the static routes the fastapi object should attempt to mount
 
-    called by add_static_routes_to_app(), returns a dict of urls and associated names
-    to try to mount to the fastapi object. the length of urls is enforced to be equal
+    called by add_static_routes_to_app(), returns a dict of paths and associated names
+    to try to mount to the fastapi object. the length of paths is enforced to be equal
     to the length of names to avoid errors when adding routes to the app.
 
     Returns
     -------
-    routes : Dict["urls": List[str], "names": List[str]]
+    routes : Dict["paths": List[str], "names": List[str]]
         routes to attempt to mount; each url should be relative (no leading '/') and
         each name should specify how you want the url to be mounted on the app (i.e.
         name of 'js' will be mounted under '/js' and named 'js')
@@ -37,13 +39,14 @@ def get_static_routes():
     Raises
     ------
     ValueError
-        [description]
+        if the length of paths != length of names (every url must be named)
     """
-    urls = [
+    paths = [
         "frontend/dist/js",
         "frontend/dist/css",
         "frontend/dist/fonts",
         "frontend/dist/img",
+        "static/icons",
         "static",
     ]
     names = [
@@ -51,11 +54,12 @@ def get_static_routes():
         "css",
         "fonts",
         "img",
+        "",
         "static",
     ]
-    if len(urls) != len(names):
+    if len(paths) != len(names):
         raise ValueError("Every URL must have a corresponding name")
-    routes = {"urls": urls, "names": names}
+    routes = {"paths": paths, "names": names}
     return routes
 
 
@@ -77,12 +81,12 @@ def add_static_routes_to_app(app: FastAPI) -> FastAPI:
         fastapi instance with valid routes from get_static_routes() mounted
     """
     routes = get_static_routes()
-    for i in range(len(routes["urls"])):
+    for i in range(len(routes["paths"])):
         try:
             app.routes.append(
                 Mount(
                     f"/{routes['names'][i]}",
-                    StaticFiles(directory=routes["urls"][i]),
+                    StaticFiles(directory=routes["paths"][i]),
                     name=routes["names"][i],
                 )
             )
@@ -92,17 +96,22 @@ def add_static_routes_to_app(app: FastAPI) -> FastAPI:
 
 
 def create_app() -> FastAPI:
-    """Create a fastapi instance that has logging, database, and static routes set up
+    """Create a fastapi instance that has logging and database set up
 
-    remove app config from main.py to keep main clean
+    remove app config from main.py to keep main clean. static routes aren't added
+    here because if you try to add things to the root level (i.e. favicons) here,
+    you'll block every other app.route since the resolver looks top -> bottom
 
     Returns
     -------
     new_app : FastAPI
-        app with logger, db, and routes attached
+        app with logger and db attached
     """
     new_app = FastAPI(title="WikiMap", version="0.0.2", debug=False)
     new_app.logger = get_logging_config()
-    new_app = add_static_routes_to_app(new_app)
     new_app.db = get_database()
     return new_app
+
+
+if __name__ == "__main__":
+    print(get_static_routes())
